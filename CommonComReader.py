@@ -265,7 +265,7 @@ class CommonCLIReader(CommonReader):
     
     def read(self, file_path):
         options = self.readCommon(file_path)
-        super().readOnSingleAppLayer(options)
+        return super().readOnSingleAppLayer(options)
 
 class CommonCOMReader(CommonReader):
     def __init__(self,
