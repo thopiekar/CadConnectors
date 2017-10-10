@@ -19,19 +19,21 @@ from UM.Scene.SceneNode import SceneNode
 # Trying to import one of the COM modules
 from .ComFactory import ComConnector
 
-class CommonCOMReader(MeshReader):
+class CommonReader(MeshReader):
     conversion_lock = threading.Lock()
 
     def __init__(self,
-                 app_name,
                  app_friendly_name):
         super().__init__()
         
         # Setting default aka fallback
-        self._default_app_name = app_name
         self._default_app_friendly_name = app_friendly_name
         
-        #self._file_formats_first_choice = []
+        # By default allow no parallel execution. Just to be failsave...
+        self._parallel_execution_allowed = False
+        
+        # Recommeded order of formats to export to
+        self._file_formats_first_choice = []
 
         # Start/stop behaviour
 
@@ -75,7 +77,7 @@ class CommonCOMReader(MeshReader):
 
     @property
     def _app_names(self):
-        return [self._default_app_name, ]
+        return []
 
     @property
     def _reader_for_file_format(self):
@@ -83,9 +85,6 @@ class CommonCOMReader(MeshReader):
 
         # Trying 3MF first because it describes the model much better..
         # However, this is untested since this plugin was only tested with STL support
-        if PluginRegistry.getInstance().isActivePlugin("3MFReader"):
-            _reader_for_file_format["3mf"] = PluginRegistry.getInstance().getPluginObject("3MFReader")
-
         if PluginRegistry.getInstance().isActivePlugin("STLReader"):
             _reader_for_file_format["stl"] = PluginRegistry.getInstance().getPluginObject("STLReader")
 
@@ -93,12 +92,6 @@ class CommonCOMReader(MeshReader):
             Logger.log("d", "Could not find any reader for (probably) supported file formats!")
 
         return _reader_for_file_format
-
-    def startApp(self, options):
-        Logger.log("d", "Calling %s...", options["app_name"])
-        options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
-
-        return options
 
     def checkApp(self):
         raise NotImplementedError("Checking app is not implemented!")
@@ -125,74 +118,86 @@ class CommonCOMReader(MeshReader):
     def nodePostProcessing(self, node):
         return node
 
-    def read(self, file_path):
-        # Let's convert only one file at a time!
-        self.conversion_lock.acquire()
-        
+    def readCommon(self, file_path):
+        "Common steps for each read"
+
         options = {"foreignFile": file_path,
                    "foreignFormat": os.path.splitext(file_path)[1],
                    }
 
-        # Append all formats which are not preferred to the end of the list
-        fileFormats = self._file_formats_first_choice
-        for file_format in self._reader_for_file_format.keys():
-            if file_format not in fileFormats:
-                fileFormats.append(file_format)
+        # Let's convert only one file at a time!
+        self.conversion_lock.acquire()
         
+        # Append all formats which are not preferred to the end of the list
+        options["fileFormats"] = self._file_formats_first_choice
+        for file_format in self._reader_for_file_format.keys():
+            if file_format not in options["fileFormats"]:
+                options["fileFormats"].append(file_format)
+        
+        return options
+        
+    def readOnSingleAppLayer(self, options):
+        scene_node = None
+        
+        # Tell the loaded application to open a file...
+        Logger.log("d", "... and opening file.")
+        options = self.openForeignFile(options)
+                   
+        # Trying to convert into all formats 1 by 1 and continue with the successful export
+        Logger.log("i", "Trying to convert into one of: %s", options["fileFormats"])
+        for file_format in options["fileFormats"]:
+            Logger.log("d", "Trying to convert <%s>...", os.path.split(options["foreignFile"])[1])
+            options["tempType"] = file_format
+        
+            # Creating a new unique filename in the temporary directory..
+            options["tempFile"] = os.path.join(tempfile.tempdir,
+                                                "{}.{}".format(uuid.uuid4(), file_format.upper()),
+                                               )
+            Logger.log("d", "... into '%s' format: <%s>", file_format, options["tempFile"])
+            try:
+                self.exportFileAs(options)
+            except:
+                Logger.logException("e", "Could not export <%s> into '%s'.", options["foreignFile"], file_format)
+                continue
+
+            if os.path.isfile(options["tempFile"]):
+                Logger.log("d", "Found temporary file!")
+            else:
+                Logger.log("c", "Temporary file not found after export!")
+                continue
+        
+            # Opening the resulting file in Cura
+            try:
+                reader = Application.getInstance().getMeshFileHandler().getReaderForFile(options["tempFile"])
+                if not reader:
+                    Logger.log("d", "Found no reader for %s. That's strange...", file_format)
+                    continue
+                Logger.log("d", "Using reader: %s", reader.getPluginId())
+                scene_node = reader.read(options["tempFile"])
+                break
+            except:
+                Logger.logException("e", "Failed to open exported <%s> file in Cura!", file_format)
+                continue
+            finally:
+                # Whatever happens, remove the temp_file again..
+                Logger.log("d", "Removing temporary %s file, called <%s>", file_format, options["tempFile"])
+                os.remove(options["tempFile"])
+                # Pass to the node the correct aka original filename
+        
+        return scene_node
+
+    def readOnMultipleAppLayer(self, options):
         scene_node = None
         for app_name in self._app_names:
             options["app_name"] = app_name
             
-            # Starting app and Coinit before
-            ComConnector.CoInit()
+            # Preparations before starting the application
+            self.preStartApp()
             try:
                 # Start the app by its name...
                 self.startApp(options)
                 
-                # Tell the loaded application to open a file...
-                Logger.log("d", "... and opening file.")
-                options = self.openForeignFile(options)
-                   
-                # Trying to convert into all formats 1 by 1 and continue with the successful export
-                Logger.log("i", "Trying to convert into one of: %s", fileFormats)
-                for file_format in fileFormats:
-                    Logger.log("d", "Trying to convert <%s>...", os.path.split(file_path)[1])
-                    options["tempType"] = file_format
-        
-                    # Creating a new unique filename in the temporary directory..
-                    options["tempFile"] = os.path.join(tempfile.tempdir,
-                                                       "{}.{}".format(uuid.uuid4(), file_format.upper()),
-                                                       )
-                    Logger.log("d", "... into '%s' format: <%s>", file_format, options["tempFile"])
-                    try:
-                        self.exportFileAs(options)
-                    except:
-                        Logger.logException("e", "Could not export <%s> into '%s'.", file_path, file_format)
-                        continue
-        
-                    if os.path.isfile(options["tempFile"]):
-                        Logger.log("d", "Found temporary file!")
-                    else:
-                        Logger.log("c", "Temporary file not found after export!")
-                        continue
-        
-                    # Opening the resulting file in Cura
-                    try:
-                        reader = Application.getInstance().getMeshFileHandler().getReaderForFile(options["tempFile"])
-                        if not reader:
-                            Logger.log("d", "Found no reader for %s. That's strange...", file_format)
-                            continue
-                        Logger.log("d", "Using reader: %s", reader.getPluginId())
-                        scene_node = reader.read(options["tempFile"])
-                        break
-                    except:
-                        Logger.logException("e", "Failed to open exported <%s> file in Cura!", file_format)
-                        continue
-                    finally:
-                        # Whatever happens, remove the temp_file again..
-                        Logger.log("d", "Removing temporary %s file, called <%s>", file_format, options["tempFile"])
-                        os.remove(options["tempFile"])
-                        # Pass to the node the correct aka original filename
+                scene_node = self.readOnSingleAppLayer(options)
                 if scene_node:
                     # We don't need to test the next application. The result is already there...
                     break
@@ -209,8 +214,8 @@ class CommonCOMReader(MeshReader):
                 # Nuke the instance!
                 if "app_instance" in options.keys():
                     del options["app_instance"]
-                # .. and finally CoInit
-                ComConnector.UnCoInit()
+                # .. and finally do some cleanups
+                self.postCloseApp()
 
         self.conversion_lock.release()
 
@@ -226,7 +231,7 @@ class CommonCOMReader(MeshReader):
             # This part is needed for reloading converted files into STL - Cura will try otherwise to reopen the temp file, which is already removed.
             mesh_data = scene_node.getMeshData()
             Logger.log("d", "File path in mesh was: %s", mesh_data.getFileName())
-            mesh_data = mesh_data.set(file_name = file_path)
+            mesh_data = mesh_data.set(file_name = options["foreignFile"])
             scene_node.setMeshData(mesh_data)
             scene_node_list = [scene_node]
         else:
@@ -236,3 +241,60 @@ class CommonCOMReader(MeshReader):
         self.nodePostProcessing(scene_node_list)
 
         return scene_node
+
+class CommonCLIReader(CommonReader):
+    def __init__(self, 
+                 app_friendly_name):
+        super().__init__(app_friendly_name)
+        self._parallel_execution_allowed = True
+        
+    def preStartApp(self):
+        # Nothing needs to be prepared before starting
+        pass
+    
+    def startApp(self, options):
+        # No start needed..
+        return options
+    
+    def openForeignFile(self, options):
+        # We open the file, while converting.. No actual opening of the file needed..
+        return options
+    
+    def exportFileAs(self, options):
+        raise NotImplementedError("Exporting files is not implemented!")
+    
+    def read(self, file_path):
+        options = self.readCommon(file_path)
+        super().readOnSingleAppLayer(options)
+
+class CommonCOMReader(CommonReader):
+    def __init__(self,
+                 app_friendly_name,
+                 app_com_service_family):
+        CommonReader.__init__(self, app_friendly_name)
+        self._default_app_name = app_com_service_family
+        self._default_app_friendly_name = app_friendly_name
+    
+    @property
+    def _app_names(self):
+        return [self._default_app_name, ]
+    
+    def preStartApp(self):
+        # This command shall be not part of the regular try clause.
+        # It should fatally crash and not be catched by the try.
+        ComConnector.CoInit()
+    
+    def startApp(self, options):
+        Logger.log("d", "Calling %s...", options["app_name"])
+        options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+
+        return options
+    
+    def postCloseApp(self):
+        # Finally CoInit
+        ComConnector.UnCoInit()
+    
+    def read(self, file_path):
+        options = self.readCommon(file_path)
+        return super().readOnMultipleAppLayer(options)
+    
