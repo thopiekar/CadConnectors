@@ -33,7 +33,7 @@ class CommonReader(MeshReader):
         self._parallel_execution_allowed = False
         
         # Recommeded order of formats to export to
-        self._file_formats_first_choice = []
+        
 
         # Start/stop behaviour
 
@@ -77,6 +77,10 @@ class CommonReader(MeshReader):
 
     @property
     def _app_names(self):
+        return []
+
+    @property
+    def _file_formats_first_choice(self):
         return []
 
     @property
