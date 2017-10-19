@@ -1,11 +1,5 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
-# Buildins
-import os
-import tempfile
-import threading
-import uuid
-
 # Uranium/Cura
 from UM.Application import Application
 from UM.i18n import i18nCatalog
