@@ -9,6 +9,9 @@ class ComConnector:
     def CreateClassObject(app_name):
         return comtypes.client.GetClassObject(app_name).CreateInstance()
 
+    def CreateActiveObject(app_name):
+        return comtypes.client.GetActiveObject(app_name).CreateInstance()
+
     def CoInit():
         comtypes.CoInitializeEx(comtypes.COINIT_MULTITHREADED)
 
