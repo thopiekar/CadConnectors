@@ -1,7 +1,7 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
 # Comtypes modules
-import comtypes
+import comtypes # @UnusedImport
 import comtypes.client
 import ctypes
 
