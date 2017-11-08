@@ -1,7 +1,18 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
+# Python built-ins
+import os
+import sys
+
 # Uranium/Cura
 from UM.Logger import Logger
+
+# Using 3rd-party module directory
+Logger.log("i", "Python version: {}".format(sys.version_info))
+third_party_dir = os.path.join(os.path.split(__file__)[0], "..", "3rd-party")
+if os.path.isdir(third_party_dir):
+    Logger.log("d", "Found 3rd-party directory and adding in into PYTHONPATH.")
+    sys.path.append(third_party_dir)
 
 # Trying to import one of the COM modules
 try:
