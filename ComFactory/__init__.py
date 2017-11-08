@@ -29,4 +29,4 @@ try:
     Logger.log("i", "ComFactory: Using pywin32!")
 except ImportError:
     from .ComTypesConnector import ComConnector
-    Logger.log("i", "ComFactory: Using comtypes!")
+    Logger.logException("i", "ComFactory: Using comtypes!")
