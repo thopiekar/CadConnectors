@@ -94,3 +94,6 @@ ENV/
 # Eclipse + PyDev
 .project
 .pydevproject
+
+# 3rd-party modules
+3rd-party/
