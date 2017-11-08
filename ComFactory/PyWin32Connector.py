@@ -5,7 +5,6 @@ import win32com
 win32com.__gen_path__ = os.path.join(os.path.split(__file__)[0], "win32com_dir") 
 
 import win32com.client
-import win32com.client.gencache
 import pythoncom
 import pywintypes
 
