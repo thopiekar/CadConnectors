@@ -9,6 +9,9 @@ import pythoncom
 import pywintypes
 
 class ComConnector:
+    def getByVarInt():
+        return win32com.client.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0) # @UndefinedVariable
+    
     def CreateClassObject(app_name):
         return win32com.client.Dispatch(app_name)
 
