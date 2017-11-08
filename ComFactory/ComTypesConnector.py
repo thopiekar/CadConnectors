@@ -6,6 +6,9 @@ import comtypes.client
 import ctypes
 
 class ComConnector:
+    def getByVarInt():
+        return ctypes.byref(ctypes.c_int())
+    
     def CreateClassObject(app_name):
         return comtypes.client.GetClassObject(app_name).CreateInstance()
 
