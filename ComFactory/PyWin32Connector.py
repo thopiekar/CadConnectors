@@ -15,6 +15,9 @@ class ComConnector:
     def CreateClassObject(app_name):
         return win32com.client.Dispatch(app_name)
 
+    def CreateActiveObject(app_name):
+        return win32com.client.GetActiveObject(app_name)
+
     def CoInit():
         pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
 
