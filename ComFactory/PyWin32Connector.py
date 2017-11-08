@@ -26,7 +26,3 @@ class ComConnector:
 
     def GetComObject(toBeObjected):
         return toBeObjected
-    
-    @property
-    def IntByRef(self):
-        return win32com.client.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I1, 0)
