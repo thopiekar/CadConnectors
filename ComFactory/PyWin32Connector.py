@@ -1,5 +1,8 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
+# Python built-ins
+import os
+
 # PyWin32 modules
 import win32com
 win32com.__gen_path__ = os.path.join(os.path.split(__file__)[0], "win32com_dir") 
