@@ -33,7 +33,13 @@ class CommonCOMReader(CommonReader):
     
     def startApp(self, options):
         Logger.log("d", "Calling %s...", options["app_name"])
-        options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+        try:
+            options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+            options["app_was_active"] = True
+        except:
+            options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+            options["app_was_active"] = False
+            
 
         return options
     
