@@ -27,25 +27,39 @@ class CommonCOMReader(CommonReader):
         return [self._default_app_name, ]
     
     def preStartApp(self):
-        # This command shall be not part of the regular try clause.
-        # It should fatally crash and not be catched by the try.
-        ComConnector.CoInit()
+        # Should get removed whenever possible
+        pass
     
     def startApp(self, options):
         Logger.log("d", "Calling %s...", options["app_name"])
         try:
-            options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
-            options["app_was_active"] = True
+            try:
+                options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+                options["app_was_active"] = True
+                options["app_started_with_coinit"] = False
+            except:
+                ComConnector.CoInit()
+                options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+                options["app_was_active"] = True
+                options["app_started_with_coinit"] = True
         except:
-            options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
-            options["app_was_active"] = False
+            try:
+                options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+                options["app_was_active"] = False
+                options["app_started_with_coinit"] = False
+            except:
+                ComConnector.CoInit()
+                options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+                options["app_was_active"] = False
+                options["app_started_with_coinit"] = True
             
 
         return options
     
-    def postCloseApp(self):
-        # Finally CoInit
-        ComConnector.UnCoInit()
+    def postCloseApp(self, options):
+        # Coinit when inited
+        if options["app_started_with_coinit"]:
+            ComConnector.UnCoInit()
     
     def read(self, file_path):
         options = self.readCommon(file_path)
