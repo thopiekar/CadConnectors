@@ -106,6 +106,9 @@ class CommonReader(MeshReader):
 
     def closeApp(self, options):
         raise NotImplementedError("Procedure how to close your app is not implemented!")
+    
+    def postCloseApp(self, options):
+        pass
 
     def openForeignFile(self, options):
         "This function shall return options again. It optionally contains other data, which is needed by the reader for other tasks later."
@@ -220,7 +223,7 @@ class CommonReader(MeshReader):
                 if "app_instance" in options.keys():
                     del options["app_instance"]
                 # .. and finally do some cleanups
-                self.postCloseApp()
+                self.postCloseApp(options)
 
         self.conversion_lock.release()
 
