@@ -141,6 +141,10 @@ class CommonReader(MeshReader):
         
         return options
         
+    def preRead(self, options):
+        Logger.log("d", "Doing preRead...")
+        return True
+        
     def readOnSingleAppLayer(self, options):
         scene_node = None
         

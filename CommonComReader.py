@@ -49,5 +49,8 @@ class CommonCOMReader(CommonReader):
     
     def read(self, file_path):
         options = self.readCommon(file_path)
+        if not self.preRead(options):
+            Logger.log("d", "preRead failed..")
+            return MeshReader.PreReadResult.cancelled
         return super().readOnMultipleAppLayer(options)
     
