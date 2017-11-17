@@ -32,26 +32,29 @@ class CommonCOMReader(CommonReader):
     
     def startApp(self, options):
         Logger.log("d", "Calling %s...", options["app_name"])
+        options["app_started_with_coinit"] = False
         try:
             try:
+                options["app_started_with_coinit"] = False
                 options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
                 options["app_was_active"] = True
-                options["app_started_with_coinit"] = False
             except:
                 ComConnector.CoInit()
+                options["app_started_with_coinit"] = True
                 options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
                 options["app_was_active"] = True
-                options["app_started_with_coinit"] = True
         except:
             try:
+                if options["app_started_with_coinit"]:
+                    ComConnector.UnCoInit()
+                options["app_started_with_coinit"] = False
                 options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
                 options["app_was_active"] = False
-                options["app_started_with_coinit"] = False
             except:
                 ComConnector.CoInit()
+                options["app_started_with_coinit"] = True
                 options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
                 options["app_was_active"] = False
-                options["app_started_with_coinit"] = True
             
 
         return options
