@@ -175,7 +175,8 @@ class CommonReader(MeshReader):
                 continue
 
             if os.path.isfile(options["tempFile"]):
-                Logger.log("d", "Found temporary file!")
+                size_of_file_mb = os.path.getsize(options["tempFile"]) / 1024 ** 2 
+                Logger.log("d", "Found temporary file! (size: {}MB)".format(size_of_file_mb))
             else:
                 Logger.log("c", "Temporary file not found after export!")
                 continue
