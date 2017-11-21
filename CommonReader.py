@@ -129,7 +129,7 @@ class CommonReader(MeshReader):
     def closeForeignFile(self, options):
         raise NotImplementedError("Closing files is not implemented!")
 
-    def nodePostProcessing(self, node):
+    def nodePostProcessing(self, options, node):
         return node
 
     def readCommon(self, file_path):
@@ -288,6 +288,6 @@ class CommonReader(MeshReader):
             # Likely the result of an 3MF conversion
             scene_node_list = scene_node
 
-        self.nodePostProcessing(scene_node_list)
+        self.nodePostProcessing(options, scene_node_list)
 
         return scene_node
