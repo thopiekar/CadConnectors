@@ -26,28 +26,41 @@ class CommonCOMReader(CommonReader):
     def _app_names(self):
         return [self._default_app_name, ]
     
-    def preStartApp(self):
-        # This command shall be not part of the regular try clause.
-        # It should fatally crash and not be catched by the try.
-        ComConnector.CoInit()
-    
     def startApp(self, options):
         Logger.log("d", "Calling %s...", options["app_name"])
+        options["app_started_with_coinit"] = False
         try:
-            options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
-            options["app_was_active"] = True
+            try:
+                options["app_started_with_coinit"] = False
+                options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+                options["app_was_active"] = True
+            except:
+                ComConnector.CoInit()
+                options["app_started_with_coinit"] = True
+                options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+                options["app_was_active"] = True
         except:
-            options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
-            options["app_was_active"] = False
+            try:
+                if options["app_started_with_coinit"]:
+                    ComConnector.UnCoInit()
+                options["app_started_with_coinit"] = False
+                options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+                options["app_was_active"] = False
+            except:
+                ComConnector.CoInit()
+                options["app_started_with_coinit"] = True
+                options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+                options["app_was_active"] = False
             
 
         return options
     
-    def postCloseApp(self):
-        # Finally CoInit
-        ComConnector.UnCoInit()
+    def postCloseApp(self, options):
+        # Coinit when inited
+        if options["app_started_with_coinit"]:
+            ComConnector.UnCoInit()
     
     def read(self, file_path):
         options = self.readCommon(file_path)
-        return super().readOnMultipleAppLayer(options)
+        return self.readOnMultipleAppLayer(options)
     
