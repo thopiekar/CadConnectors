@@ -95,6 +95,9 @@ class CommonReader(MeshReader):
 
         return _reader_for_file_format
 
+    def preStartApp(self, options):
+        pass
+
     def checkApp(self):
         raise NotImplementedError("Checking app is not implemented!")
 
@@ -203,7 +206,7 @@ class CommonReader(MeshReader):
             options["app_name"] = app_name
             
             # Preparations before starting the application
-            self.preStartApp()
+            self.preStartApp(options)
             try:
                 # Start the app by its name...
                 self.startApp(options)
