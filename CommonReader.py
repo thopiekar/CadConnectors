@@ -8,14 +8,17 @@ import uuid
 import platform
 
 # Uranium/Cura
-from UM.Application import Application
-from UM.Mesh.MeshReader import MeshReader
-from UM.Logger import Logger
-from UM.PluginRegistry import PluginRegistry
+from UM.Application import Application # @UnresolvedImport
+from UM.Logger import Logger # @UnresolvedImport
+from UM.i18n import i18nCatalog # @UnresolvedImport
+from UM.Mesh.MeshReader import MeshReader # @UnresolvedImport
+from UM.Message import Message # @UnresolvedImport
+from UM.PluginRegistry import PluginRegistry # @UnresolvedImport
 
 if platform.system() == "Windows":
     from .SystemUtils import convertDosPathIntoLongPath
 
+i18n_catalog = i18nCatalog("CadIntegrationUtils")
 
 class CommonReader(MeshReader):
     conversion_lock = threading.Lock()
@@ -29,6 +32,9 @@ class CommonReader(MeshReader):
         
         # By default allow no parallel execution. Just to be failsave...
         self._parallel_execution_allowed = False
+        
+        # Quality classes
+        self.quality_classes = None
         
         # Recommeded order of formats to export to
         
@@ -117,7 +123,7 @@ class CommonReader(MeshReader):
         "This function shall return options again. It optionally contains other data, which is needed by the reader for other tasks later."
         raise NotImplementedError("Opening files is not implemented!")
 
-    def exportFileAs(self, model, options):
+    def exportFileAs(self, model, options, quality_enum = None):
         raise NotImplementedError("Exporting files is not implemented!")
 
     def closeForeignFile(self, options):
@@ -168,18 +174,47 @@ class CommonReader(MeshReader):
                                                "{}.{}".format(uuid.uuid4(), file_format.upper()),
                                                )
             Logger.log("d", "... into '%s' format: <%s>", file_format, options["tempFile"])
-            try:
-                self.exportFileAs(options)
-            except:
-                Logger.logException("e", "Could not export <%s> into '%s'.", options["foreignFile"], file_format)
-                continue
-
-            if os.path.isfile(options["tempFile"]):
-                size_of_file_mb = os.path.getsize(options["tempFile"]) / 1024 ** 2 
-                Logger.log("d", "Found temporary file! (size: {}MB)".format(size_of_file_mb))
+            # Export using quality classes if possible
+            if self.quality_classes is None:
+                quality_classes = {None : None}
             else:
-                Logger.log("c", "Temporary file not found after export!")
+                quality_classes = self.quality_classes
+                
+            quality_enums = list(quality_classes.keys())
+            quality_enums.sort()
+            quality_enums.reverse()
+            
+            if "app_export_quality" in options.keys():
+                quality_enum_target = options["app_export_quality"]
+                while quality_enums[0] > quality_enum_target:
+                    del quality_enums[0]
+            
+            for quality_enum in quality_enums:
+                try:
+                    self.exportFileAs(options, quality_enum = quality_enum)
+                except:
+                    Logger.logException("e", "Could not export <%s> into '%s'.", options["foreignFile"], file_format)
+                    continue
+    
+                if os.path.isfile(options["tempFile"]):
+                    size_of_file_mb = os.path.getsize(options["tempFile"]) / 1024 ** 2 
+                    Logger.log("d", "Found temporary file! (size: {}MB)".format(size_of_file_mb))
+                    break
+                else:
+                    Logger.log("c", "Temporary file not found after export! (next quality class..)")
+                    continue
+            if not os.path.isfile(options["tempFile"]):
+                Logger.log("c", "Temporary file not found after export! (next file format..)")
                 continue
+            
+            if quality_enum is not quality_enum_target:
+                error_message = Message(i18n_catalog.i18nc("@info:status",
+                                                           "Could not export using \"{}\" quality!\nFelt back to \"{}\".".format(self.quality_classes[quality_enum_target],
+                                                                                                                                 self.quality_classes[quality_enum]
+                                                                                                                                 )
+                                                           )
+                                        )
+                error_message.show()
         
             # Opening the resulting file in Cura
             try:
