@@ -36,9 +36,6 @@ class CommonReader(MeshReader):
         # Quality classes
         self.quality_classes = None
         
-        # Recommeded order of formats to export to
-        
-
         # Start/stop behaviour
 
         # Technically neither preloading nor keeping the instance up, is possible, since Cura calls the file reader from different/new threads
