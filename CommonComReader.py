@@ -26,10 +26,6 @@ class CommonCOMReader(CommonReader):
     def _app_names(self):
         return [self._default_app_name, ]
     
-    def preStartApp(self):
-        # Should get removed whenever possible
-        pass
-    
     def startApp(self, options):
         Logger.log("d", "Calling %s...", options["app_name"])
         options["app_started_with_coinit"] = False
