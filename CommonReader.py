@@ -81,9 +81,6 @@ class CommonReader(MeshReader):
     def preStartApp(self, options):
         pass
 
-    def checkApp(self):
-        raise NotImplementedError("Checking app is not implemented!")
-
     def getAppVisible(self, state):
         raise NotImplementedError("Toggle for visibility not implemented!")
 
