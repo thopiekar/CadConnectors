@@ -28,36 +28,55 @@ class CommonCOMReader(CommonReader):
     
     def startApp(self, options):
         Logger.log("d", "Calling %s...", options["app_name"])
-        options["app_started_with_coinit"] = False
+        
+        Logger.log("d", "CreateActiveObject..")
+        options["app_was_active"] = True
         try:
-            try:
-                options["app_started_with_coinit"] = False
-                options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
-                options["app_was_active"] = True
-            except:
-                ComConnector.CoInit()
-                options["app_started_with_coinit"] = True
-                options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
-                options["app_was_active"] = True
+            options["app_started_with_coinit"] = False
+            options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+            return options
         except:
-            try:
-                if options["app_started_with_coinit"]:
-                    ComConnector.UnCoInit()
-                options["app_started_with_coinit"] = False
-                options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
-                options["app_was_active"] = False
-            except:
-                ComConnector.CoInit()
-                options["app_started_with_coinit"] = True
-                options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
-                options["app_was_active"] = False
+            Logger.logException("d", "Getting active object without Coinit failed")
+        
+        
+        try:
+            Logger.log("d", "CoInit..")
+            ComConnector.CoInit()
+            options["app_started_with_coinit"] = True
+            options["app_instance"] = ComConnector.CreateActiveObject(options["app_name"])
+            return options
+        except:
+            Logger.logException("d", "Getting active object with Coinit failed")
+        
+        if options["app_started_with_coinit"]:
+            Logger.log("d", "UnCoInit..")
+            ComConnector.UnCoInit()
+        
+        Logger.log("d", "Trying to get new class object..")
+        options["app_was_active"] = False
+        try:
             
+            options["app_started_with_coinit"] = False
+            options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+            return options
+        except:
+            Logger.logException("d", "Getting object without Coinit failed")
+        
+        try:
+            Logger.log("d", "CoInit..")
+            ComConnector.CoInit()
+            options["app_started_with_coinit"] = True
+            options["app_instance"] = ComConnector.CreateClassObject(options["app_name"])
+            return options
+        except:
+            Logger.logException("d", "Getting object with Coinit failed")
 
-        return options
+        raise Exception("Could not start service!")
     
     def postCloseApp(self, options):
-        # Coinit when inited
+        Logger.log("d", "postCloseApp..")
         if options["app_started_with_coinit"]:
+            Logger.log("d", "UnCoInit..")
             ComConnector.UnCoInit()
     
     def read(self, file_path):
