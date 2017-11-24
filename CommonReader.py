@@ -33,10 +33,7 @@ class CommonReader(MeshReader):
         # By default allow no parallel execution. Just to be failsave...
         self._parallel_execution_allowed = False
         
-        # Quality classes
-        self.quality_classes = None
-        
-        # Start/stop behaviour
+        # # Start/stop behaviour
 
         # Technically neither preloading nor keeping the instance up, is possible, since Cura calls the file reader from different/new threads
         # The error when trying to use it here is:
@@ -55,54 +52,42 @@ class CommonReader(MeshReader):
             Logger.log("d", "Preloading %s..." %(self._app_friendlyName))
             self.startApp()
         """
-
-        #Logger.log("d", "Looking for readers...")
-        #self.__init_builtin_readers__()
-
-    #def __init_builtin_readers__(self):
-    #    self._file_formats_first_choice = [] # Ordered list of preferred formats
-    #    self._reader_for_file_format = {}
-    #
-    #    # Trying 3MF first because it describes the model much better..
-    #    # However, this is untested since this plugin was only tested with STL support
-    #    if PluginRegistry.getInstance().isActivePlugin("3MFReader"):
-    #        self._reader_for_file_format["3mf"] = PluginRegistry.getInstance().getPluginObject("3MFReader")
-    #        self._file_formats_first_choice.append("3mf")
-    #
-    #    if PluginRegistry.getInstance().isActivePlugin("STLReader"):
-    #        self._reader_for_file_format["stl"] = PluginRegistry.getInstance().getPluginObject("STLReader")
-    #        self._file_formats_first_choice.append("stl")
-    #
-    #    if not len(self._reader_for_file_format):
-    #        Logger.log("d", "Could not find any reader for (probably) supported file formats!")
+        
+        # Doing some routines after all plugins are loaded
+        app_instance = Application.getInstance()
+        if "pluginsLoaded" in dir(app_instance):
+            Application.getInstance().pluginsLoaded.connect(self._onAfterPluginsLoaded)
+        else:
+            Application.getInstance().engineCreatedSignal.connect(self._onAfterPluginsLoaded)
 
     @property
     def _app_names(self):
         return []
+    
+    @property
+    def _prefered_app_name(self):
+        return None
+
+    def _onAfterPluginsLoaded(self, clean_current_dict = True):
+        if clean_current_dict:
+            self._reader_for_file_format = {}
+
+        if PluginRegistry.getInstance().isActivePlugin("STLReader"):
+            self._reader_for_file_format["stl"] = PluginRegistry.getInstance().getPluginObject("STLReader")
+        else:
+            Logger.log("w", "Could not find STLReader!")
+        
+        if not len(self._reader_for_file_format):
+            Logger.log("w", "Could not find any reader for (probably) supported file formats!")
+        
+        return None
 
     @property
     def _file_formats_first_choice(self):
         return []
 
-    @property
-    def _reader_for_file_format(self):
-        _reader_for_file_format = {}
-
-        # Trying 3MF first because it describes the model much better..
-        # However, this is untested since this plugin was only tested with STL support
-        if PluginRegistry.getInstance().isActivePlugin("STLReader"):
-            _reader_for_file_format["stl"] = PluginRegistry.getInstance().getPluginObject("STLReader")
-
-        if not len(_reader_for_file_format):
-            Logger.log("d", "Could not find any reader for (probably) supported file formats!")
-
-        return _reader_for_file_format
-
     def preStartApp(self, options):
         pass
-
-    def checkApp(self):
-        raise NotImplementedError("Checking app is not implemented!")
 
     def getAppVisible(self, state):
         raise NotImplementedError("Toggle for visibility not implemented!")
@@ -235,7 +220,17 @@ class CommonReader(MeshReader):
 
     def readOnMultipleAppLayer(self, options):
         scene_node = None
-        for app_name in self._app_names:
+        
+        list_of_apps = self._app_names
+        prefered_app = self._prefered_app_name
+        if prefered_app:
+            if prefered_app in list_of_apps:
+                list_of_apps.remove(prefered_app)
+            list_of_apps = [prefered_app,] + list_of_apps
+         
+        for app_name in list_of_apps:
+            if prefered_app and app_name is not prefered_app:
+                Logger.log("e", "Couldn't use prefered app. Had to fall back!")
             options["app_name"] = app_name
             
             # Preparations before starting the application
