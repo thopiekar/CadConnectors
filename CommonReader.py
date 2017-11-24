@@ -63,6 +63,10 @@ class CommonReader(MeshReader):
     @property
     def _app_names(self):
         return []
+    
+    @property
+    def _prefered_app_name(self):
+        return None
 
     def _onAfterPluginsLoaded(self, clean_current_dict = True):
         if clean_current_dict:
@@ -216,7 +220,17 @@ class CommonReader(MeshReader):
 
     def readOnMultipleAppLayer(self, options):
         scene_node = None
-        for app_name in self._app_names:
+        
+        list_of_apps = self._app_names
+        prefered_app = self._prefered_app_name
+        if prefered_app:
+            if prefered_app in list_of_apps:
+                list_of_apps.remove(prefered_app)
+            list_of_apps = [prefered_app,] + list_of_apps
+         
+        for app_name in list_of_apps:
+            if prefered_app and app_name is not prefered_app:
+                Logger.log("e", "Couldn't use prefered app. Had to fall back!")
             options["app_name"] = app_name
             
             # Preparations before starting the application
