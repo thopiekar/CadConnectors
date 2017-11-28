@@ -105,7 +105,7 @@ class CommonReader(MeshReader):
         "This function shall return options again. It optionally contains other data, which is needed by the reader for other tasks later."
         raise NotImplementedError("Opening files is not implemented!")
 
-    def exportFileAs(self, model, options, quality_enum = None):
+    def exportFileAs(self, options, quality_enum = None):
         raise NotImplementedError("Exporting files is not implemented!")
 
     def closeForeignFile(self, options):
