@@ -81,5 +81,11 @@ class CommonCOMReader(CommonReader):
     
     def read(self, file_path):
         options = self.readCommon(file_path)
-        return self.readOnMultipleAppLayer(options)
+        result = self.readOnMultipleAppLayer(options)
+        
+        # Unlock if needed
+        if not self._parallel_execution_allowed:
+            self.conversion_lock.release()
+        
+        return result
     

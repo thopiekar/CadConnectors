@@ -35,7 +35,13 @@ class CommonCLIReader(CommonReader):
     
     def read(self, file_path):
         options = self.readCommon(file_path)
-        return super().readOnSingleAppLayer(options)
+        result = super().readOnSingleAppLayer(options)
+        
+        # Unlock if needed
+        if not self._parallel_execution_allowed:
+            self.conversion_lock.release()
+        
+        return result
     
     def executeCommand(self, command, cwd = os.path.curdir):
         environment_with_additional_path = os.environ.copy()

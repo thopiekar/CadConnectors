@@ -264,8 +264,6 @@ class CommonReader(MeshReader):
                 # .. and finally do some cleanups
                 self.postCloseApp(options)
 
-        self.conversion_lock.release()
-
         """
         if not scene_node:
             error_message = Message(i18n_catalog.i18nc("@info:status", "Could not open {}!".format(file_path)))
