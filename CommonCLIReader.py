@@ -41,7 +41,7 @@ class CommonCLIReader(CommonReader):
         environment_with_additional_path = os.environ.copy()
         if self._additional_paths:
             environment_with_additional_path["PATH"] = os.pathsep.join(self._additional_paths) + os.pathsep + environment_with_additional_path["PATH"]
-        Logger.log("d", "PATH: \"{}\"".format(environment_with_additional_path["PATH"]))
+        Logger.log("i", "Executing command: {}".format(command))
         p = subprocess.Popen(command,
                              cwd = cwd,
                              env = environment_with_additional_path,
