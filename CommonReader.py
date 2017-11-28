@@ -125,7 +125,8 @@ class CommonReader(MeshReader):
                    }
 
         # Let's convert only one file at a time!
-        self.conversion_lock.acquire()
+        if not self._parallel_execution_allowed:
+            self.conversion_lock.acquire()
         
         # Append all formats which are not preferred to the end of the list
         options["fileFormats"] = self._file_formats_first_choice
