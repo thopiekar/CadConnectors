@@ -1,12 +1,26 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
-from .CommonReader import CommonReader
+
+# Uranium
+from UM.Platform import Platform # @UnresolvedImport
+from UM.Logger import Logger # @UnresolvedImport
+
+# CIU
+from .CommonReader import CommonReader # @UnresolvedImport
+
+# built-ins
+import os
+import subprocess
+
+# OS dependent
+if Platform.isWindows():
+    import winreg
 
 class CommonCLIReader(CommonReader):
     def __init__(self, 
                  app_friendly_name):
         super().__init__(app_friendly_name)
         self._parallel_execution_allowed = True
-        
+    
     def preStartApp(self):
         # Nothing needs to be prepared before starting
         pass
@@ -19,9 +33,44 @@ class CommonCLIReader(CommonReader):
         # We open the file, while converting.. No actual opening of the file needed..
         return options
     
-    def exportFileAs(self, options):
-        raise NotImplementedError("Exporting files is not implemented!")
-    
     def read(self, file_path):
         options = self.readCommon(file_path)
-        super().readOnSingleAppLayer(options)
+        return super().readOnSingleAppLayer(options)
+    
+    def executeCommand(self, command, cwd = os.path.curdir):
+        environment_with_additional_path = os.environ.copy()
+        if self._additional_paths:
+            environment_with_additional_path["PATH"] = os.pathsep.join(self._additional_paths) + os.pathsep + environment_with_additional_path["PATH"]
+        Logger.log("d", "PATH: \"{}\"".format(environment_with_additional_path["PATH"]))
+        p = subprocess.Popen(command,
+                             cwd = cwd,
+                             env = environment_with_additional_path,
+                             shell = True,
+                             )
+        p.wait()
+        
+    def scanForAllPaths(self):
+        self._additional_paths = []
+        if Platform.isWindows():
+            for file_extension in self._supported_extensions:
+                path = self._findPathFromExtension(file_extension)
+                Logger.log("d", "Found path for {}: {}".format(file_extension, path))
+                if path:
+                    self._additional_paths.append(path)
+    
+    def _findPathFromExtension(self, extension):
+        file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, extension)
+        file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, os.path.join(file_class,
+                                                                              "shell",
+                                                                              "open",
+                                                                              "command",
+                                                                              )
+                                       )
+        file_class = file_class.split("\"")
+        while "" in file_class:
+            file_class.remove("")
+        file_class = file_class[0]
+        path = os.path.split(file_class)[0]
+        if os.path.isdir(path):
+            return path
+        return
