@@ -3,7 +3,7 @@
 import winreg
 import os
 
-file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, ".scad")
+file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, ".FCStd".lower())
 file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, os.path.join(file_class,"shell", "open", "command"))
 file_class = file_class.split("\"")
 while "" in file_class:
