@@ -1,28 +1,20 @@
-# Copyright (c) 2017 Thomas Karl Pietrowski
-
-# Python built-ins
 import os
 import sys
 
-# Uranium/Cura
-from UM.Logger import Logger # @UnresolvedImport
-
 # Using 3rd-party module directory
-Logger.log("i", "Python version: {}".format(sys.version_info))
+print("i", "Python version: {}".format(sys.version_info))
 third_party_dir = os.path.join(os.path.split(__file__)[0], "..", "3rd-party")
 if os.path.isdir(third_party_dir):
-    Logger.log("d", "Found 3rd-party directory and adding in into PYTHONPATH.")
+    print("d", "Found 3rd-party directory and adding in into PYTHONPATH.")
     sys.path.append(third_party_dir)
 
 try:
-    Logger.log("i", "Looking for win32com in Cura..")
+    print("i", "Looking for win32com in Cura..")
     import win32com
     del win32com
-except:
-    Logger.logException("i", ".. Probably couldn't find it. Using our own..")
-    
-    ## Getting PyWin32 on board
-    # os.sys additions
+except Exception as e:
+    print("i", ".. Probably couldn't find it. Using our own..", str(e))
+    # win32* specific things
     pyd_dirs = [os.path.join(third_party_dir, "pythonwin"),
                 os.path.join(third_party_dir, "win32"),
                 os.path.join(third_party_dir, "win32", "lib"),
@@ -33,8 +25,6 @@ except:
         if os.path.isdir(pyd_dir):
             sys.path.append(pyd_dir)
             print("i", "Added <{}> to sys.path!".format(pyd_dir))
-    
-    # os.environ['PATH'] additions
     dll_dirs = [os.path.join(third_party_dir, "pywin32_system32"),
                 ]
     for dll_dir in dll_dirs:
@@ -42,13 +32,14 @@ except:
         if os.path.isdir(dll_dir):
             os.environ['PATH'] = dll_dir + ';' + os.environ['PATH']
             print("i", "Added <{}> to os.environ['PATH']!".format(dll_dir))
+    
+print("d", "sys.path: {}".format(sys.path))
 
-Logger.log("d", "sys.path: {}".format(sys.path))
+# PyWin32 modules
+import win32com
+win32com.__gen_path__ = os.path.join(os.path.split(__file__)[0], "win32com_dir") 
 
-# Trying to import one of the COM modules
-try:
-    from .PyWin32Connector import ComConnector
-    Logger.log("i", "ComFactory: Using pywin32!")
-except ImportError:
-    from .ComTypesConnector import ComConnector
-    Logger.logException("i", "ComFactory: Using comtypes!")
+import win32com.client
+import pythoncom
+import pywintypes
+

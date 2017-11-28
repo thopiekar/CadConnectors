@@ -53,6 +53,9 @@ class CommonReader(MeshReader):
             self.startApp()
         """
         
+        # Quality
+        self.quality_classes = None
+        
         # Doing some routines after all plugins are loaded
         app_instance = Application.getInstance()
         if "pluginsLoaded" in dir(app_instance):
@@ -105,7 +108,7 @@ class CommonReader(MeshReader):
         "This function shall return options again. It optionally contains other data, which is needed by the reader for other tasks later."
         raise NotImplementedError("Opening files is not implemented!")
 
-    def exportFileAs(self, model, options, quality_enum = None):
+    def exportFileAs(self, options, quality_enum = None):
         raise NotImplementedError("Exporting files is not implemented!")
 
     def closeForeignFile(self, options):
@@ -122,7 +125,8 @@ class CommonReader(MeshReader):
                    }
 
         # Let's convert only one file at a time!
-        self.conversion_lock.acquire()
+        if not self._parallel_execution_allowed:
+            self.conversion_lock.acquire()
         
         # Append all formats which are not preferred to the end of the list
         options["fileFormats"] = self._file_formats_first_choice
@@ -189,14 +193,15 @@ class CommonReader(MeshReader):
                 Logger.log("c", "Temporary file not found after export! (next file format..)")
                 continue
             
-            if quality_enum is not quality_enum_target:
-                error_message = Message(i18n_catalog.i18nc("@info:status",
-                                                           "Could not export using \"{}\" quality!\nFelt back to \"{}\".".format(self.quality_classes[quality_enum_target],
-                                                                                                                                 self.quality_classes[quality_enum]
-                                                                                                                                 )
-                                                           )
-                                        )
-                error_message.show()
+            if "app_export_quality" in options.keys():
+                if quality_enum is not quality_enum_target:
+                    error_message = Message(i18n_catalog.i18nc("@info:status",
+                                                               "Could not export using \"{}\" quality!\nFelt back to \"{}\".".format(self.quality_classes[quality_enum_target],
+                                                                                                                                     self.quality_classes[quality_enum]
+                                                                                                                                     )
+                                                               )
+                                            )
+                    error_message.show()
         
             # Opening the resulting file in Cura
             try:
@@ -258,8 +263,6 @@ class CommonReader(MeshReader):
                     del options["app_instance"]
                 # .. and finally do some cleanups
                 self.postCloseApp(options)
-
-        self.conversion_lock.release()
 
         """
         if not scene_node:

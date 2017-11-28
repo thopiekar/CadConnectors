@@ -1,14 +1,9 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
 # Uranium/Cura
-from UM.Application import Application
-from UM.i18n import i18nCatalog
+from UM.i18n import i18nCatalog # @UnresolvedImport
 i18n_catalog = i18nCatalog("CuraSolidWorksIntegrationPlugin")
-from UM.Message import Message
-from UM.Logger import Logger
-from UM.Mesh.MeshReader import MeshReader
-from UM.PluginRegistry import PluginRegistry
-from UM.Scene.SceneNode import SceneNode
+from UM.Logger import Logger # @UnresolvedImport
 
 # Trying to import one of the COM modules
 from .ComFactory import ComConnector
@@ -81,5 +76,11 @@ class CommonCOMReader(CommonReader):
     
     def read(self, file_path):
         options = self.readCommon(file_path)
-        return self.readOnMultipleAppLayer(options)
+        result = self.readOnMultipleAppLayer(options)
+        
+        # Unlock if needed
+        if not self._parallel_execution_allowed:
+            self.conversion_lock.release()
+        
+        return result
     
