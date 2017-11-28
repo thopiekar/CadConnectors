@@ -1,8 +1,8 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
 # Comtypes modules
-import comtypes # @UnusedImport
-import comtypes.client
+import comtypes # @UnusedImport # @UnresolvedImport
+import comtypes.client # @UnresolvedImport
 import ctypes
 
 class ComConnector:

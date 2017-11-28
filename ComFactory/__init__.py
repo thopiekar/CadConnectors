@@ -5,7 +5,7 @@ import os
 import sys
 
 # Uranium/Cura
-from UM.Logger import Logger
+from UM.Logger import Logger # @UnresolvedImport
 
 # Using 3rd-party module directory
 Logger.log("i", "Python version: {}".format(sys.version_info))
