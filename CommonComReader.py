@@ -1,13 +1,8 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
 # Uranium/Cura
-from UM.Application import Application
 from UM.i18n import i18nCatalog # @UnresolvedImport
 i18n_catalog = i18nCatalog("CuraSolidWorksIntegrationPlugin")
-from UM.Message import Message
-from UM.Mesh.MeshReader import MeshReader
-from UM.PluginRegistry import PluginRegistry
-from UM.Scene.SceneNode import SceneNode
 from UM.Logger import Logger # @UnresolvedImport
 
 # Trying to import one of the COM modules
