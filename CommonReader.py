@@ -53,6 +53,9 @@ class CommonReader(MeshReader):
             self.startApp()
         """
         
+        # Quality
+        self.quality_classes = None
+        
         # Doing some routines after all plugins are loaded
         app_instance = Application.getInstance()
         if "pluginsLoaded" in dir(app_instance):
@@ -189,14 +192,15 @@ class CommonReader(MeshReader):
                 Logger.log("c", "Temporary file not found after export! (next file format..)")
                 continue
             
-            if quality_enum is not quality_enum_target:
-                error_message = Message(i18n_catalog.i18nc("@info:status",
-                                                           "Could not export using \"{}\" quality!\nFelt back to \"{}\".".format(self.quality_classes[quality_enum_target],
-                                                                                                                                 self.quality_classes[quality_enum]
-                                                                                                                                 )
-                                                           )
-                                        )
-                error_message.show()
+            if "app_export_quality" in options.keys():
+                if quality_enum is not quality_enum_target:
+                    error_message = Message(i18n_catalog.i18nc("@info:status",
+                                                               "Could not export using \"{}\" quality!\nFelt back to \"{}\".".format(self.quality_classes[quality_enum_target],
+                                                                                                                                     self.quality_classes[quality_enum]
+                                                                                                                                     )
+                                                               )
+                                            )
+                    error_message.show()
         
             # Opening the resulting file in Cura
             try:
