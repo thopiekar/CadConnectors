@@ -65,18 +65,21 @@ class CommonCLIReader(CommonReader):
                     self._additional_paths.append(path)
     
     def _findPathFromExtension(self, extension):
-        file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, extension)
-        file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, os.path.join(file_class,
-                                                                              "shell",
-                                                                              "open",
-                                                                              "command",
-                                                                              )
-                                       )
-        file_class = file_class.split("\"")
-        while "" in file_class:
-            file_class.remove("")
-        file_class = file_class[0]
-        path = os.path.split(file_class)[0]
-        if os.path.isdir(path):
-            return path
+        try:
+            file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, extension)
+            file_class = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, os.path.join(file_class,
+                                                                                  "shell",
+                                                                                  "open",
+                                                                                  "command",
+                                                                                  )
+                                           )
+            file_class = file_class.split("\"")
+            while "" in file_class:
+                file_class.remove("")
+            file_class = file_class[0]
+            path = os.path.split(file_class)[0]
+            if os.path.isdir(path):
+                return path
+        except:
+            Logger.logException("e", "Could not find PATH for extension: {}".format(extension))
         return
