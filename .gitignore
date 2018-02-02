@@ -96,7 +96,7 @@ ENV/
 .pydevproject
 
 # 3rd-party modules
-3rd-party/
+!3rd-party/**
 
 # win32com - generated files
 ComFactory/win32com_dir/
