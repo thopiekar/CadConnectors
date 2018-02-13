@@ -153,7 +153,8 @@ class CommonReader(MeshReader):
             options["tempType"] = file_format
         
             # Creating a new unique filename in the temporary directory..
-            tempdir = tempfile.tempdir
+            tempdir = tempfile.gettempdir()
+            Logger.log("d", "Using suggested tempdir: {}". format(repr(tempdir)))
             if platform.system() == "Windows":
                 tempdir = convertDosPathIntoLongPath(tempdir)
             options["tempFile"] = os.path.join(tempdir,
