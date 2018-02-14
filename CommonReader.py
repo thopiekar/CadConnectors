@@ -212,6 +212,9 @@ class CommonReader(MeshReader):
                     continue
                 Logger.log("d", "Using reader: %s", reader.getPluginId())
                 scene_node = reader.read(options["tempFile"])
+                if scene_node is None:
+                    Logger.log("d", "Scene node is empty. Trying next format and therefore other file reader!")
+                    continue
                 break
             except:
                 Logger.logException("e", "Failed to open exported <%s> file in Cura!", file_format)
