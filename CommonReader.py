@@ -265,6 +265,7 @@ class CommonReader(MeshReader):
                 self.postCloseApp(options)
 
         if not scene_node:
+            Logger.log("d", "Scene node is {}. We had no luck to use any of the readers to get the mesh data!".format(repr(scene_node)))
             return scene_node
         elif not isinstance(scene_node, list):
             # This part is needed for reloading converted files into STL - Cura will try otherwise to reopen the temp file, which is already removed.
