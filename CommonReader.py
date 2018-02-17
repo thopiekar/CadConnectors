@@ -206,8 +206,8 @@ class CommonReader(MeshReader):
                     continue
                 Logger.log("d", "Using reader: %s", reader.getPluginId())
                 scene_node = reader.read(options["tempFile"])
-                if scene_node is None:
-                    Logger.log("d", "Scene node is empty. Trying next format and therefore other file reader!")
+                if not scene_node:
+                    Logger.log("d", "Scene node is {}. Trying next format and therefore other file reader!".format(repr(scene_node)))
                     continue
                 break
             except:
