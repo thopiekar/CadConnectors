@@ -33,7 +33,6 @@ class CommonCOMReader(CommonReader):
         except:
             Logger.logException("d", "Getting active object without Coinit failed")
         
-        
         try:
             Logger.log("d", "CoInit..")
             ComConnector.CoInit()
@@ -70,10 +69,11 @@ class CommonCOMReader(CommonReader):
     
     def postCloseApp(self, options):
         Logger.log("d", "postCloseApp..")
-        if options["app_started_with_coinit"]:
-            Logger.log("d", "UnCoInit..")
-            ComConnector.UnCoInit()
-    
+        if "app_started_with_coinit" in options.keys():
+            if options["app_started_with_coinit"]:
+                Logger.log("d", "UnCoInit..")
+                ComConnector.UnCoInit()
+        
     def read(self, file_path):
         options = self.readCommon(file_path)
         result = self.readOnMultipleAppLayer(options)
