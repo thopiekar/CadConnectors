@@ -145,7 +145,7 @@ class CommonReader(MeshReader):
         for file_format in options["fileFormats"]:
             Logger.log("d", "Trying to convert <%s>...", os.path.split(options["foreignFile"])[1])
             options["tempType"] = file_format
-        
+            
             # Creating a new unique filename in the temporary directory..
             tempdir = tempfile.gettempdir()
             Logger.log("d", "Using suggested tempdir: {}". format(repr(tempdir)))
@@ -176,7 +176,7 @@ class CommonReader(MeshReader):
                 except:
                     Logger.logException("e", "Could not export <%s> into '%s'.", options["foreignFile"], file_format)
                     continue
-    
+                
                 if os.path.isfile(options["tempFile"]):
                     size_of_file_mb = os.path.getsize(options["tempFile"]) / 1024 ** 2 
                     Logger.log("d", "Found temporary file! (size: {}MB)".format(size_of_file_mb))
@@ -197,7 +197,7 @@ class CommonReader(MeshReader):
                                                                )
                                             )
                     error_message.show()
-        
+                    
             # Opening the resulting file in Cura
             try:
                 reader = Application.getInstance().getMeshFileHandler().getReaderForFile(options["tempFile"])
