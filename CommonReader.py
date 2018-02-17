@@ -71,23 +71,8 @@ class CommonReader(MeshReader):
     def _prefered_app_name(self):
         return None
 
-    def _onAfterPluginsLoaded(self, clean_current_dict = True):
-        if clean_current_dict:
-            self._reader_for_file_format = {}
-
-        if PluginRegistry.getInstance().isActivePlugin("STLReader"):
-            self._reader_for_file_format["stl"] = PluginRegistry.getInstance().getPluginObject("STLReader")
-        else:
-            Logger.log("w", "Could not find STLReader!")
-        
-        if not len(self._reader_for_file_format):
-            Logger.log("w", "Could not find any reader for (probably) supported file formats!")
-        
+    def _onAfterPluginsLoaded(self):
         return None
-
-    @property
-    def _file_formats_first_choice(self):
-        return []
 
     def preStartApp(self, options):
         pass
@@ -123,6 +108,7 @@ class CommonReader(MeshReader):
         options = {"foreignFile": file_path,
                    "foreignFormat": os.path.splitext(file_path)[1],
                    "tempFileKeep" : False,
+                   "fileFormats" : [],
                    }
 
         # Let's convert only one file at a time!
@@ -130,11 +116,6 @@ class CommonReader(MeshReader):
             self.conversion_lock.acquire()
         
         # Append all formats which are not preferred to the end of the list
-        options["fileFormats"] = self._file_formats_first_choice
-        for file_format in self._reader_for_file_format.keys():
-            if file_format not in options["fileFormats"]:
-                options["fileFormats"].append(file_format)
-        
         return options
         
     def preRead(self, options):
