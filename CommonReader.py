@@ -122,6 +122,7 @@ class CommonReader(MeshReader):
 
         options = {"foreignFile": file_path,
                    "foreignFormat": os.path.splitext(file_path)[1],
+                   "tempFileKeep" : False,
                    }
 
         # Let's convert only one file at a time!
@@ -221,9 +222,11 @@ class CommonReader(MeshReader):
                 continue
             finally:
                 # Whatever happens, remove the temp_file again..
-                Logger.log("d", "Removing temporary %s file, called <%s>", file_format, options["tempFile"])
-                os.remove(options["tempFile"])
-                # Pass to the node the correct aka original filename
+                if not options["tempFileKeep"]:
+                    Logger.log("d", "Removing temporary %s file, called <%s>", file_format, options["tempFile"])
+                    os.remove(options["tempFile"])
+                else:
+                    Logger.log("d", "Keeping temporary %s file, called <%s>", file_format, options["tempFile"])
         
         return scene_node
 
