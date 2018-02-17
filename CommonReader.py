@@ -99,8 +99,20 @@ class CommonReader(MeshReader):
     def closeForeignFile(self, options):
         raise NotImplementedError("Closing files is not implemented!")
 
-    def nodePostProcessing(self, options, node):
-        return node
+    def renameNodes(self, options, scene_nodes):
+        for scene_node in scene_nodes:
+            if not scene_node.hasChildren():
+                mesh_data = scene_node.getMeshData()
+                Logger.log("d", "File path in mesh was: %s", mesh_data.getFileName())
+                mesh_data = mesh_data.set(file_name = options["foreignFile"])
+                scene_node.setMeshData(mesh_data)
+            else:
+                self.renameNodes(options, scene_node.getAllChildren())
+        return scene_nodes
+
+    def nodePostProcessing(self, options, scene_nodes):
+        self.renameNodes(options, scene_nodes)
+        return scene_nodes
 
     def readCommon(self, file_path):
         "Common steps for each read"
@@ -256,11 +268,7 @@ class CommonReader(MeshReader):
             return scene_node
         elif not isinstance(scene_node, list):
             # This part is needed for reloading converted files into STL - Cura will try otherwise to reopen the temp file, which is already removed.
-            mesh_data = scene_node.getMeshData()
-            Logger.log("d", "File path in mesh was: %s", mesh_data.getFileName())
-            mesh_data = mesh_data.set(file_name = options["foreignFile"])
-            scene_node.setMeshData(mesh_data)
-            scene_node_list = [scene_node]
+            scene_node_list = [scene_node,]
         else:
             # Likely the result of an 3MF conversion
             scene_node_list = scene_node
