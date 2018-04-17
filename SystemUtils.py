@@ -1,7 +1,12 @@
 # Copyright (c) 2017 Thomas Karl Pietrowski
 
+from UM.Logger import Logger # @UnresolvedImport
+
+try:
+    import win32api
+except:
+    Logger.log("i", "Skipping usage of win32 extensions")
 #import ctypes
-import win32api
 
 def convertDosPathIntoLongPath(dosPath):
     # TODO: Move the code into the COM compat layer!
@@ -11,5 +16,6 @@ def convertDosPathIntoLongPath(dosPath):
     #    # It is better to catch these situations and raise an error here!
     #    raise ValueError("Bad path passed!")
     #return longpath.value
-    longpath = win32api.GetLongPathName(dosPath)
-    return longpath
+    if "win32api" in globals():
+        dosPath = win32api.GetLongPathName(dosPath)
+    return dosPath
