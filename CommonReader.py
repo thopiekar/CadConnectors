@@ -26,13 +26,13 @@ class CommonReader(MeshReader):
     def __init__(self,
                  app_friendly_name):
         super().__init__()
-        
+
         # Setting default aka fallback
         self._default_app_friendly_name = app_friendly_name
-        
+
         # By default allow no parallel execution. Just to be failsave...
         self._parallel_execution_allowed = False
-        
+
         # # Start/stop behaviour
 
         # Technically neither preloading nor keeping the instance up, is possible, since Cura calls the file reader from different/new threads
@@ -52,10 +52,10 @@ class CommonReader(MeshReader):
             Logger.log("d", "Preloading %s..." %(self._app_friendlyName))
             self.startApp()
         """
-        
+
         # Quality
         self.quality_classes = None
-        
+
         # Doing some routines after all plugins are loaded
         app_instance = Application.getInstance()
         if "pluginsLoaded" in dir(app_instance):
@@ -66,7 +66,7 @@ class CommonReader(MeshReader):
     @property
     def _app_names(self):
         return []
-    
+
     @property
     def _prefered_app_name(self):
         return None
@@ -85,7 +85,7 @@ class CommonReader(MeshReader):
 
     def closeApp(self, options):
         raise NotImplementedError("Procedure how to close your app is not implemented!")
-    
+
     def postCloseApp(self, options):
         pass
 
@@ -126,26 +126,26 @@ class CommonReader(MeshReader):
         # Let's convert only one file at a time!
         if not self._parallel_execution_allowed:
             self.conversion_lock.acquire()
-        
+
         # Append all formats which are not preferred to the end of the list
         return options
-        
+
     def preRead(self, options):
         return MeshReader.PreReadResult.accepted
-        
+
     def readOnSingleAppLayer(self, options):
         scene_node = None
-        
+
         # Tell the loaded application to open a file...
         Logger.log("d", "... and opening file.")
         options = self.openForeignFile(options)
-                   
+
         # Trying to convert into all formats 1 by 1 and continue with the successful export
         Logger.log("i", "Trying to convert into one of: %s", options["fileFormats"])
         for file_format in options["fileFormats"]:
             Logger.log("d", "Trying to convert <%s>...", os.path.split(options["foreignFile"])[1])
             options["tempType"] = file_format
-            
+
             # Creating a new unique filename in the temporary directory..
             tempdir = tempfile.gettempdir()
             Logger.log("d", "Using suggested tempdir: {}". format(repr(tempdir)))
@@ -160,25 +160,25 @@ class CommonReader(MeshReader):
                 quality_classes = {None : None}
             else:
                 quality_classes = self.quality_classes
-                
+
             quality_enums = list(quality_classes.keys())
             quality_enums.sort()
             quality_enums.reverse()
-            
+
             if "app_export_quality" in options.keys():
                 quality_enum_target = options["app_export_quality"]
                 while quality_enums[0] > quality_enum_target:
                     del quality_enums[0]
-            
+
             for quality_enum in quality_enums:
                 try:
                     self.exportFileAs(options, quality_enum = quality_enum)
                 except:
                     Logger.logException("e", "Could not export <%s> into '%s'.", options["foreignFile"], file_format)
                     continue
-                
+
                 if os.path.isfile(options["tempFile"]):
-                    size_of_file_mb = os.path.getsize(options["tempFile"]) / 1024 ** 2 
+                    size_of_file_mb = os.path.getsize(options["tempFile"]) / 1024 ** 2
                     Logger.log("d", "Found temporary file! (size: {}MB)".format(size_of_file_mb))
                     break
                 else:
@@ -187,7 +187,7 @@ class CommonReader(MeshReader):
             if not os.path.isfile(options["tempFile"]):
                 Logger.log("c", "Temporary file not found after export! (next file format..)")
                 continue
-            
+
             if "app_export_quality" in options.keys():
                 if quality_enum is not quality_enum_target:
                     error_message = Message(i18n_catalog.i18nc("@info:status",
@@ -197,7 +197,7 @@ class CommonReader(MeshReader):
                                                                )
                                             )
                     error_message.show()
-                    
+
             # Opening the resulting file in Cura
             try:
                 reader = Application.getInstance().getMeshFileHandler().getReaderForFile(options["tempFile"])
@@ -220,35 +220,35 @@ class CommonReader(MeshReader):
                     os.remove(options["tempFile"])
                 else:
                     Logger.log("d", "Keeping temporary %s file, called <%s>", file_format, options["tempFile"])
-        
+
         return scene_node
 
     def readOnMultipleAppLayer(self, options):
         scene_node = None
-        
+
         list_of_apps = self._app_names
         prefered_app = self._prefered_app_name
         if prefered_app:
             if prefered_app in list_of_apps:
                 list_of_apps.remove(prefered_app)
             list_of_apps = [prefered_app,] + list_of_apps
-         
+
         for app_name in list_of_apps:
             if prefered_app and app_name is not prefered_app:
                 Logger.log("e", "Couldn't use prefered app. Had to fall back!")
             options["app_name"] = app_name
-            
+
             # Preparations before starting the application
             self.preStartApp(options)
             try:
                 # Start the app by its name...
                 self.startApp(options)
-                
+
                 scene_node = self.readOnSingleAppLayer(options)
                 if scene_node:
                     # We don't need to test the next application. The result is already there...
                     break
-                
+
             except Exception:
                 Logger.logException("e", "Failed to export using '%s'...", app_name)
                 # Let's try with the next application...
