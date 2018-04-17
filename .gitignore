@@ -97,6 +97,7 @@ ENV/
 
 # 3rd-party modules
 !3rd-party/**
+/3rd-party/**/*.pyc
 
 # win32com - generated files
 ComFactory/win32com_dir/
