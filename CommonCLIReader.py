@@ -57,7 +57,7 @@ class CommonCLIReader(CommonReader):
         p = subprocess.Popen(command,
                              cwd = cwd,
                              env = environment_with_additional_path,
-                             shell = True,
+                             shell = shell,
                              )
         p.wait()
         
