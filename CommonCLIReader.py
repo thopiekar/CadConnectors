@@ -60,6 +60,7 @@ class CommonCLIReader(CommonReader):
                              shell = shell,
                              )
         p.wait()
+        return p.returncode
         
     def scanForAllPaths(self):
         self._additional_paths = []
