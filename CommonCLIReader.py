@@ -43,7 +43,13 @@ class CommonCLIReader(CommonReader):
         
         return result
     
-    def executeCommand(self, command, cwd = os.path.curdir):
+    def executeCommand(self, command, cwd = os.path.curdir, shell = None):
+        if shell == None:
+            if Platform.isWindows():
+                shell = True
+            else:
+                shell = False
+        
         environment_with_additional_path = os.environ.copy()
         if self._additional_paths:
             environment_with_additional_path["PATH"] = os.pathsep.join(self._additional_paths) + os.pathsep + environment_with_additional_path["PATH"]
