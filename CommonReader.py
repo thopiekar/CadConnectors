@@ -210,6 +210,12 @@ class CommonReader(MeshReader):
                 if not scene_node:
                     Logger.log("d", "Scene node is {}. Trying next format and therefore other file reader!".format(repr(scene_node)))
                     continue
+                elif not isinstance(scene_node, list):
+                    # This part is needed for reloading converted files into STL - Cura will try otherwise to reopen the temp file, which is already removed.
+                    scene_node = [scene_node,]
+
+                self.nodePostProcessing(options, scene_node)
+
                 break
             except:
                 Logger.logException("e", "Failed to open exported <%s> file in Cura!", file_format)
@@ -268,13 +274,5 @@ class CommonReader(MeshReader):
         if not scene_node:
             Logger.log("d", "Scene node is {}. We had no luck to use any of the readers to get the mesh data!".format(repr(scene_node)))
             return scene_node
-        elif not isinstance(scene_node, list):
-            # This part is needed for reloading converted files into STL - Cura will try otherwise to reopen the temp file, which is already removed.
-            scene_node_list = [scene_node,]
-        else:
-            # Likely the result of an 3MF conversion
-            scene_node_list = scene_node
-
-        self.nodePostProcessing(options, scene_node_list)
 
         return scene_node
