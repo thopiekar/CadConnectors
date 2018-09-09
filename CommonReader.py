@@ -103,6 +103,7 @@ class CommonReader(MeshReader):
         for scene_node in scene_nodes:
             if not scene_node.hasChildren():
                 mesh_data = scene_node.getMeshData()
+
                 Logger.log("d", "File path in mesh was: %s", mesh_data.getFileName())
                 mesh_data = mesh_data.set(file_name = options["foreignFile"])
                 scene_node.setMeshData(mesh_data)
