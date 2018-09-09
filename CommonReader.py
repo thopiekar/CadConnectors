@@ -59,9 +59,9 @@ class CommonReader(MeshReader):
         # Doing some routines after all plugins are loaded
         app_instance = Application.getInstance()
         if "pluginsLoaded" in dir(app_instance):
-            Application.getInstance().pluginsLoaded.connect(self._onAfterPluginsLoaded)
+            app_instance.pluginsLoaded.connect(self._onAfterPluginsLoaded)
         else:
-            Application.getInstance().engineCreatedSignal.connect(self._onAfterPluginsLoaded)
+            app_instance.engineCreatedSignal.connect(self._onAfterPluginsLoaded)
 
     @property
     def _app_names(self):
