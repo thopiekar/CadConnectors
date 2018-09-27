@@ -159,9 +159,10 @@ class CommonCLIReader(CommonReader):
             Logger.logException("e", "Unknown exception, while looking for extension: {}".format(extension))
             return
 
-        if file_class:
-            Logger.log("d", "File extension seems to be an alias. Following \"{}\"...".format(file_class))
-            return self._findPathForExtensionClassic(file_class, key_base, key_path)
+        if file_class and not file_class == extension:
+            if not file_class == extension: # Otherwise we might end up in an endless loop
+                Logger.log("d", "File extension seems to be an alias. Following \"{}\"...".format(file_class))
+                return self._findPathForExtensionClassic(file_class, key_base, key_path)
 
         try:
             command = winreg.QueryValue(key_base, os.path.join(key_path.format(extension),
