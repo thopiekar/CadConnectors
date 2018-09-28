@@ -84,7 +84,7 @@ class CommonCLIReader(CommonReader):
                 for path in found_paths:
                     if path not in paths:
                         paths.insert(0, path)
-            elif type(found_paths) is None:
+            elif found_paths is None:
                 pass
             else:
                 Logger.log("e", "Unknown data type for \"found_paths\": {}".format(type(found_paths)))
@@ -159,9 +159,15 @@ class CommonCLIReader(CommonReader):
             Logger.logException("e", "Unknown exception, while looking for extension: {}".format(extension))
             return
 
-        if file_class:
-            Logger.log("d", "File extension seems to be an alias. Following \"{}\"...".format(file_class))
-            return self._findPathForExtensionClassic(file_class, key_base, key_path)
+        if file_class and not file_class == extension:
+            if not file_class == extension: # Otherwise we might end up in an endless loop
+                Logger.log("d", "File extension seems to be an alias. Following \"{}\"...".format(file_class))
+                result = self._findPathForExtensionClassic(file_class, key_base, key_path)
+
+                if not result:
+                    Logger.log("d", "Following \"{}\" gave no result. Trying to determine the command here...".format(file_class))
+                else:
+                    return result
 
         try:
             command = winreg.QueryValue(key_base, os.path.join(key_path.format(extension),
