@@ -84,7 +84,7 @@ class CommonCLIReader(CommonReader):
                 for path in found_paths:
                     if path not in paths:
                         paths.insert(0, path)
-            elif type(found_paths) is None:
+            elif found_paths is None:
                 pass
             else:
                 Logger.log("e", "Unknown data type for \"found_paths\": {}".format(type(found_paths)))
